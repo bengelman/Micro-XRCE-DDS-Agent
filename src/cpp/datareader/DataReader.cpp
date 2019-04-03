@@ -24,6 +24,8 @@
 
 #define MAX_SAMPLES_UNLIMITED 0xFFFF
 
+#define MAX_SAMPLES_UNLIMITED 0xFFFF
+
 namespace eprosima {
 namespace uxr {
 
