@@ -22,6 +22,8 @@
 #include <iostream>
 #include <atomic>
 
+#define MAX_SAMPLES_UNLIMITED 0xFFFF
+
 namespace eprosima {
 namespace uxr {
 
