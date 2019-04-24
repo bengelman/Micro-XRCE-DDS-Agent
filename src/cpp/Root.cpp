@@ -107,12 +107,6 @@ dds::xrce::ResultStatus Root::create_client(
         result_status.status(dds::xrce::STATUS_ERR_INVALID_DATA);
     }
 
-    auto epoch_time = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    dds::xrce::Time_t timestamp;
-    timestamp.seconds(static_cast<int32_t>(epoch_time / 1000000000));
-    timestamp.nanoseconds(static_cast<uint32_t>(epoch_time % 1000000000));
-    agent_representation.agent_timestamp(timestamp);
     agent_representation.xrce_cookie(dds::xrce::XRCE_COOKIE);
     agent_representation.xrce_version(dds::xrce::XRCE_VERSION);
     agent_representation.xrce_vendor_id(EPROSIMA_VENDOR_ID);
@@ -125,14 +119,7 @@ dds::xrce::ResultStatus Root::get_info(dds::xrce::ObjectInfo& agent_info)
     dds::xrce::ResultStatus result_status;
 
     /* Agent config. */
-    auto epoch_time = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    dds::xrce::Time_t timestamp;
-    timestamp.seconds(static_cast<int32_t>(epoch_time / 1000000000));
-    timestamp.nanoseconds(static_cast<uint32_t>(epoch_time % 1000000000));
-
     dds::xrce::AGENT_Representation agent_representation;
-    agent_representation.agent_timestamp(timestamp);
     agent_representation.xrce_cookie(dds::xrce::XRCE_COOKIE);
     agent_representation.xrce_version(dds::xrce::XRCE_VERSION);
     agent_representation.xrce_vendor_id(EPROSIMA_VENDOR_ID);
