@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <uxr/agent/transport/ip/tcp/TCPServerWindows.hpp>
+#include <uxr/agent/transport/ip/IpEndPoint.hpp>
+
 #include <string.h>
 
 namespace eprosima {
@@ -170,7 +172,7 @@ bool TCPServer::send_message(OutputPacket output_packet)
 {
     bool rv = false;
     uint8_t msg_size_buf[2];
-    const TCPEndPoint* destination = static_cast<const TCPEndPoint*>(output_packet.destination.get());
+    const Ipv4EndPoint* destination = static_cast<const Ipv4EndPoint*>(output_packet.destination.get());
     uint64_t source_id = (uint64_t(destination->get_addr()) << 16) | destination->get_port();
 
     std::unique_lock<std::mutex> lock(connections_mtx_);
@@ -320,7 +322,7 @@ bool TCPServer::close_connection(TCPConnection& connection)
 
 void TCPServer::init_input_buffer(TCPInputBuffer& buffer)
 {
-    buffer.state = TCP_BUFFER_EMPTY;
+    buffer.state = TCPInputBufferState::EMPTY;
     buffer.msg_size = 0;
 }
 
@@ -339,7 +341,7 @@ bool TCPServer::read_message(int timeout)
                 {
                     InputPacket input_packet;
                     input_packet.message.reset(new InputMessage(conn.input_buffer.buffer.data(), bytes_read));
-                    input_packet.source.reset(new TCPEndPoint(conn.addr, conn.port));
+                    input_packet.source.reset(new Ipv4EndPoint(conn.addr, conn.port));
                     messages_queue_.push(std::move(input_packet));
                     rv = true;
                 }

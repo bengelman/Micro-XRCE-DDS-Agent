@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <uxr/agent/transport/ip/udp/UDPServerLinux.hpp>
+#include <uxr/agent/transport/ip/IpEndPoint.hpp>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -136,7 +137,7 @@ bool UDPServer::recv_message(InputPacket& input_packet, int timeout)
             input_packet.message.reset(new InputMessage(buffer_, static_cast<size_t>(bytes_received)));
             uint32_t addr = ((struct sockaddr_in*)&client_addr)->sin_addr.s_addr;
             uint16_t port = ((struct sockaddr_in*)&client_addr)->sin_port;
-            input_packet.source.reset(new UDPEndPoint(addr, port));
+            input_packet.source.reset(new Ipv4EndPoint(addr, port));
             rv = true;
         }
     }
@@ -154,7 +155,7 @@ bool UDPServer::recv_message(InputPacket& input_packet, int timeout)
 bool UDPServer::send_message(OutputPacket output_packet)
 {
     bool rv = false;
-    const UDPEndPoint* destination = static_cast<const UDPEndPoint*>(output_packet.destination.get());
+    const Ipv4EndPoint* destination = static_cast<const Ipv4EndPoint*>(output_packet.destination.get());
     struct sockaddr_in client_addr;
 
     client_addr.sin_family = AF_INET;

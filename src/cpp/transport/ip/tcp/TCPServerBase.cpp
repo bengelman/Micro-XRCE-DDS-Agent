@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <uxr/agent/transport/ip/tcp/TCPServerBase.hpp>
+#include <uxr/agent/transport/ip/IpEndPoint.hpp>
 
 namespace eprosima {
 namespace uxr {
@@ -36,7 +37,7 @@ void TCPServerBase::on_create_client(
         EndPoint* source,
         const dds::xrce::CLIENT_Representation& representation)
 {
-    TCPEndPoint* endpoint = static_cast<TCPEndPoint*>(source);
+    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
     uint64_t source_id = (uint64_t(endpoint->get_addr()) << 16) | endpoint->get_port();
     const dds::xrce::ClientKey& client_key = representation.client_key();
     uint32_t client_id = uint32_t(client_key.at(0) +
@@ -74,7 +75,7 @@ void TCPServerBase::on_create_client(
 
 void TCPServerBase::on_delete_client(EndPoint* source)
 {
-    TCPEndPoint* endpoint = static_cast<TCPEndPoint*>(source);
+    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
     uint64_t source_id = (endpoint->get_addr() << 16) | endpoint->get_port();
 
     /* Update maps. */
@@ -90,7 +91,7 @@ void TCPServerBase::on_delete_client(EndPoint* source)
 const dds::xrce::ClientKey TCPServerBase::get_client_key(EndPoint* source)
 {
     dds::xrce::ClientKey client_key;
-    TCPEndPoint* endpoint = static_cast<TCPEndPoint*>(source);
+    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
     std::lock_guard<std::mutex> lock(clients_mtx_);
     auto it = source_to_client_map_.find((uint64_t(endpoint->get_addr()) << 16) | endpoint->get_port());
     if (it != source_to_client_map_.end())
@@ -116,7 +117,7 @@ std::unique_ptr<EndPoint> TCPServerBase::get_source(const dds::xrce::ClientKey& 
     if (it != client_to_source_map_.end())
     {
         uint64_t source_id = it->second;
-        source.reset(new TCPEndPoint(uint32_t(source_id >> 16), uint16_t(source_id & 0xFFFF)));
+        source.reset(new Ipv4EndPoint(uint32_t(source_id >> 16), uint16_t(source_id & 0xFFFF)));
     }
     return source;
 }
@@ -131,7 +132,7 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
     {
         switch (connection.input_buffer.state)
         {
-            case TCP_BUFFER_EMPTY:
+            case TCPInputBufferState::EMPTY:
             {
                 connection.input_buffer.position = 0;
                 uint8_t size_buf[2];
@@ -145,13 +146,13 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                         connection.input_buffer.msg_size = uint16_t((uint16_t(size_buf[1]) << 8) | size_buf[0]);
                         if (connection.input_buffer.msg_size != 0)
                         {
-                            connection.input_buffer.state = TCP_SIZE_READ;
+                            connection.input_buffer.state = TCPInputBufferState::SIZE_READ;
                         }
                     }
                     else
                     {
                         connection.input_buffer.msg_size = uint16_t(size_buf[0]);
-                        connection.input_buffer.state = TCP_SIZE_INCOMPLETE;
+                        connection.input_buffer.state = TCPInputBufferState::SIZE_INCOMPLETE;
                     }
                 }
                 else
@@ -164,7 +165,7 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                 }
                 break;
             }
-            case TCP_SIZE_INCOMPLETE:
+            case TCPInputBufferState::SIZE_INCOMPLETE:
             {
                 uint8_t size_msb;
                 uint8_t errcode;
@@ -174,11 +175,11 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                     connection.input_buffer.msg_size = uint16_t((uint16_t(size_msb) << 8) | connection.input_buffer.msg_size);
                     if (connection.input_buffer.msg_size != 0)
                     {
-                        connection.input_buffer.state = TCP_SIZE_READ;
+                        connection.input_buffer.state = TCPInputBufferState::SIZE_READ;
                     }
                     else
                     {
-                        connection.input_buffer.state = TCP_BUFFER_EMPTY;
+                        connection.input_buffer.state = TCPInputBufferState::EMPTY;
                     }
                 }
                 else
@@ -191,7 +192,7 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                 }
                 break;
             }
-            case TCP_SIZE_READ:
+            case TCPInputBufferState::SIZE_READ:
             {
                 connection.input_buffer.buffer.resize(connection.input_buffer.msg_size);
                 uint8_t errcode;
@@ -203,12 +204,12 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                 {
                     if (uint16_t(bytes_received) == connection.input_buffer.msg_size)
                     {
-                        connection.input_buffer.state = TCP_MESSAGE_AVAILABLE;
+                        connection.input_buffer.state = TCPInputBufferState::MESSAGE_AVAILABLE;
                     }
                     else
                     {
                         connection.input_buffer.position = uint16_t(bytes_received);
-                        connection.input_buffer.state = TCP_MESSAGE_INCOMPLETE;
+                        connection.input_buffer.state = TCPInputBufferState::MESSAGE_INCOMPLETE;
                         exit_flag = true;
                     }
                 }
@@ -222,7 +223,7 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                 }
                 break;
             }
-            case TCP_MESSAGE_INCOMPLETE:
+            case TCPInputBufferState::MESSAGE_INCOMPLETE:
             {
                 uint8_t errcode;
                 size_t bytes_received = recv_locking(connection,
@@ -234,7 +235,7 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                     connection.input_buffer.position += uint16_t(bytes_received);
                     if (connection.input_buffer.position == connection.input_buffer.msg_size)
                     {
-                        connection.input_buffer.state = TCP_MESSAGE_AVAILABLE;
+                        connection.input_buffer.state = TCPInputBufferState::MESSAGE_AVAILABLE;
                     }
                     else
                     {
@@ -251,10 +252,10 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
                 }
                 break;
             }
-            case TCP_MESSAGE_AVAILABLE:
+            case TCPInputBufferState::MESSAGE_AVAILABLE:
             {
                 rv = connection.input_buffer.msg_size;
-                connection.input_buffer.state = TCP_BUFFER_EMPTY;
+                connection.input_buffer.state = TCPInputBufferState::EMPTY;
                 exit_flag = true;
                 break;
             }

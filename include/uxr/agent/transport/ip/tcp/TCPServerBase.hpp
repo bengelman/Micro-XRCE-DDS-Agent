@@ -16,12 +16,44 @@
 #define UXR_AGENT_TRANSPORT_IP_TCP_SERVER_BASE_HPP_
 
 #include <uxr/agent/transport/Server.hpp>
-#include <uxr/agent/transport/ip/tcp/TCPEndPoint.hpp>
 
 #include <unordered_map>
 
 namespace eprosima {
 namespace uxr {
+
+typedef enum class TCPInputBufferState
+{
+    EMPTY,
+    SIZE_INCOMPLETE,
+    SIZE_READ,
+    MESSAGE_INCOMPLETE,
+    MESSAGE_AVAILABLE
+
+} TCPInputBufferState;
+
+struct TCPInputBuffer
+{
+    std::vector<uint8_t> buffer;
+    uint16_t position;
+    TCPInputBufferState state;
+    uint16_t msg_size;
+};
+
+class TCPConnection
+{
+public:
+    TCPConnection() = default;
+    ~TCPConnection() = default;
+
+public:
+    TCPInputBuffer input_buffer;
+    uint32_t addr;
+    uint16_t port;
+    uint32_t id;
+    bool active;
+    std::mutex mtx;
+};
 
 class TCPConnection;
 
@@ -68,7 +100,6 @@ protected:
     std::unordered_map<uint64_t, uint32_t> source_to_client_map_;
     std::unordered_map<uint32_t, uint64_t> client_to_source_map_;
     std::mutex clients_mtx_;
-
 };
 
 } // namespace uxr

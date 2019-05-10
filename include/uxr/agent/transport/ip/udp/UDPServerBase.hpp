@@ -16,7 +16,6 @@
 #define UXR_AGENT_TRANSPORT_IP_UDP_SERVER_BASE_HPP_
 
 #include <uxr/agent/transport/Server.hpp>
-#include <uxr/agent/transport/ip/udp/UDPEndPoint.hpp>
 
 #include <unordered_map>
 
