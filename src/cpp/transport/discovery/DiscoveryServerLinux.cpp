@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <uxr/agent/transport/discovery/DiscoveryServerLinux.hpp>
-#include <uxr/agent/transport/udp/UDPEndPoint.hpp>
+#include <uxr/agent/transport/ip/udp/UDPEndPoint.hpp>
 #include <uxr/agent/processor/Processor.hpp>
 
 #include <sys/socket.h>

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UXR_AGENT_TRANSPORT_UDP_SERVER_HPP_
-#define UXR_AGENT_TRANSPORT_UDP_SERVER_HPP_
+#ifndef UXR_AGENT_TRANSPORT_IP_UDP_SERVER_HPP_
+#define UXR_AGENT_TRANSPORT_IP_UDP_SERVER_HPP_
 
-#include <uxr/agent/transport/udp/UDPServerBase.hpp>
-#include <uxr/agent/transport/udp/UDPEndPoint.hpp>
+#include <uxr/agent/transport/ip/udp/UDPServerBase.hpp>
 #ifdef PROFILE_DISCOVERY
 #include <uxr/agent/transport/discovery/DiscoveryServerWindows.hpp>
 #endif
+#include <uxr/agent/config.hpp>
 
 #include <winsock2.h>
 #include <cstdint>
@@ -73,4 +73,4 @@ private:
 } // namespace uxr
 } // namespace eprosima
 
-#endif // UXR_AGENT_TRANSPORT_UDP_SERVER_HPP_
+#endif // UXR_AGENT_TRANSPORT_IP_UDP_SERVER_HPP_

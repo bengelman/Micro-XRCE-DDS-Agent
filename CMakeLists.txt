@@ -119,8 +119,8 @@ eprosima_find_thirdparty(Asio asio)
 # Check platform.
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(TRANSPORT_SRCS
-        src/cpp/transport/udp/UDPServerLinux.cpp
-        src/cpp/transport/tcp/TCPServerLinux.cpp
+        src/cpp/transport/ip/udp/UDPServerLinux.cpp
+        src/cpp/transport/ip/tcp/TCPServerLinux.cpp
         src/cpp/transport/serial/SerialServerLinux.cpp
         $<$<BOOL:${PROFILE_DISCOVERY}>:src/cpp/transport/discovery/DiscoveryServerLinux.cpp>
         $<$<BOOL:${PROFILE_P2P}>:src/cpp/transport/p2p/AgentDiscovererLinux.cpp>
@@ -152,8 +152,8 @@ set(SRCS
     src/cpp/types/SubMessageHeader.cpp
     $<$<BOOL:${VERBOSE}>:src/cpp/libdev/MessageOutput.cpp>
     src/cpp/transport/Server.cpp
-    src/cpp/transport/udp/UDPServerBase.cpp
-    src/cpp/transport/tcp/TCPServerBase.cpp
+    src/cpp/transport/ip/udp/UDPServerBase.cpp
+    src/cpp/transport/ip/tcp/TCPServerBase.cpp
     src/cpp/transport/serial/SerialServerBase.cpp
     src/cpp/transport/serial/serial_protocol.c
     $<$<BOOL:${PROFILE_DISCOVERY}>:src/cpp/transport/discovery/DiscoveryServer.cpp>

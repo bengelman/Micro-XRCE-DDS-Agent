@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <uxr/agent/transport/tcp/TCPServerLinux.hpp>
+#include <uxr/agent/transport/ip/tcp/TCPServerLinux.hpp>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

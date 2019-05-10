@@ -12,56 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _UXR_AGENT_TRANSPORT_TCP_ENDPOINT_HPP_
-#define _UXR_AGENT_TRANSPORT_TCP_ENDPOINT_HPP_
+#ifndef UXR_AGENT_TRANSPORT_IP_UDP_ENDPOINT_HPP_
+#define UXR_AGENT_TRANSPORT_IP_UDP_ENDPOINT_HPP_
 
 #include <uxr/agent/transport/EndPoint.hpp>
 
 #include <stdint.h>
-#include <vector>
-#include <mutex>
 
 namespace eprosima {
 namespace uxr {
 
-typedef enum TCPInputBufferState
-{
-    TCP_BUFFER_EMPTY,
-    TCP_SIZE_INCOMPLETE,
-    TCP_SIZE_READ,
-    TCP_MESSAGE_INCOMPLETE,
-    TCP_MESSAGE_AVAILABLE
-
-} TCPInputBufferState;
-
-struct TCPInputBuffer
-{
-    std::vector<uint8_t> buffer;
-    uint16_t position;
-    TCPInputBufferState state;
-    uint16_t msg_size;
-};
-
-class TCPConnection
+class UDPEndPoint : public EndPoint
 {
 public:
-    TCPConnection() = default;
-    ~TCPConnection() = default;
-
-public:
-    TCPInputBuffer input_buffer;
-    uint32_t addr;
-    uint16_t port;
-    uint32_t id;
-    bool active;
-    std::mutex mtx;
-};
-
-class TCPEndPoint : public EndPoint
-{
-public:
-    TCPEndPoint(uint32_t addr, uint16_t port) : addr_(addr), port_(port) {}
-    ~TCPEndPoint() = default;
+    UDPEndPoint(uint32_t addr, uint16_t port) : addr_(addr), port_(port) {}
+    ~UDPEndPoint() = default;
 
     uint32_t get_addr() const { return addr_; }
     uint16_t get_port() const { return port_; }
@@ -74,4 +39,4 @@ private:
 } // namespace uxr
 } // namespace eprosima
 
-#endif //_UXR_AGENT_TRANSPORT_TCP_ENDPOINT_HPP_
+#endif // UXR_AGENT_TRANSPORT_IP_UDP_ENDPOINT_HPP_
