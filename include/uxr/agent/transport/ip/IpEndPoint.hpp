@@ -17,7 +17,7 @@
 
 #include <uxr/agent/transport/EndPoint.hpp>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace eprosima {
 namespace uxr {
@@ -27,6 +27,14 @@ class Ipv4EndPoint : public EndPoint
 public:
     Ipv4EndPoint(uint32_t addr, uint16_t port) : addr_(addr), port_(port) {}
     ~Ipv4EndPoint() = default;
+
+    friend bool operator<(const Ipv4EndPoint& lhs, const Ipv4EndPoint& rhs)
+    {
+        return (lhs.addr_ < rhs.addr_)
+                ? true : (lhs.addr_ > rhs.addr_)
+                  ? false : (lhs.port_ < rhs.port_)
+                    ? true : false;
+    }
 
     uint32_t get_addr() const { return addr_; }
     uint16_t get_port() const { return port_; }

@@ -17,7 +17,7 @@
 
 #include <uxr/agent/transport/Server.hpp>
 
-#include <unordered_map>
+#include <map>
 
 namespace eprosima {
 namespace uxr {
@@ -57,6 +57,7 @@ public:
 
 class TCPConnection;
 
+template<typename T>
 class TCPServerBase : public Server
 {
 public:
@@ -70,14 +71,18 @@ public:
             EndPoint* source,
             const dds::xrce::CLIENT_Representation& representation) override;
 
-    void on_delete_client(EndPoint* source) override;
+    void on_delete_client(
+            EndPoint* source) override;
 
-    const dds::xrce::ClientKey get_client_key(EndPoint *source) override;
+    const dds::xrce::ClientKey get_client_key(
+            EndPoint *source) override;
 
-    std::unique_ptr<EndPoint> get_source(const dds::xrce::ClientKey& client_key) override;
+    std::unique_ptr<EndPoint> get_source(
+            const dds::xrce::ClientKey& client_key) override;
 
 private:
-    virtual bool close_connection(TCPConnection& connection) = 0;
+    virtual bool close_connection(
+            TCPConnection& connection) = 0;
 
     virtual size_t recv_locking(
             TCPConnection& connection,
@@ -92,13 +97,14 @@ private:
             uint8_t& errcode) = 0;
 
 protected:
-    uint16_t read_data(TCPConnection& connection);
+    uint16_t read_data(
+            TCPConnection& connection);
 
 protected:
     dds::xrce::TransportAddress transport_address_;
-    std::unordered_map<uint64_t, uint32_t> source_to_connection_map_;
-    std::unordered_map<uint64_t, uint32_t> source_to_client_map_;
-    std::unordered_map<uint32_t, uint64_t> client_to_source_map_;
+    std::map<T, uint32_t> source_to_connection_map_;
+    std::map<T, uint32_t> source_to_client_map_;
+    std::map<uint32_t, T> client_to_source_map_;
     std::mutex clients_mtx_;
 };
 

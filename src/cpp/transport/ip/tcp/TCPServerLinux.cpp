@@ -29,10 +29,11 @@ namespace uxr {
 
 const uint8_t max_attemps = 16;
 
-TCPServer::TCPServer(
+template<typename T>
+TCPServer<T>::TCPServer(
         uint16_t agent_port,
         MiddlewareKind middleware_kind)
-    : TCPServerBase{agent_port, middleware_kind}
+    : TCPServerBase<T>{agent_port, middleware_kind}
     , connections_{}
     , active_connections_()
     , free_connections_()
@@ -50,7 +51,8 @@ TCPServer::TCPServer(
 #endif
 {}
 
-bool TCPServer::init()
+template<typename T>
+bool TCPServer<T>::init()
 {
     bool rv = false;
 
@@ -65,7 +67,7 @@ bool TCPServer::init()
         /* IP and Port setup. */
         struct sockaddr_in address;
         address.sin_family = AF_INET;
-        address.sin_port = htons(transport_address_.medium_locator().port());
+        address.sin_port = htons(TCPServerBase<T>::transport_address_.medium_locator().port());
         address.sin_addr.s_addr = INADDR_ANY;
         memset(address.sin_zero, '\0', sizeof(address.sin_zero));
         if (-1 != bind(listener_poll_.fd, (struct sockaddr*)&address, sizeof(address)))
@@ -118,7 +120,8 @@ bool TCPServer::init()
     return rv;
 }
 
-bool TCPServer::close()
+template<typename T>
+bool TCPServer<T>::close()
 {
     /* Stop listener thread. */
     running_cond_ = false;
@@ -155,27 +158,31 @@ bool TCPServer::close()
 }
 
 #ifdef PROFILE_DISCOVERY
-bool TCPServer::init_discovery(uint16_t discovery_port)
+template<typename T>
+bool TCPServer<T>::init_discovery(uint16_t discovery_port)
 {
-    return discovery_server_.run(discovery_port, transport_address_);
+    return discovery_server_.run(discovery_port, TCPServerBase<T>::transport_address_);
 }
 
-bool TCPServer::close_discovery()
+template<typename T>
+bool TCPServer<T>::close_discovery()
 {
     return discovery_server_.stop();
 }
 #endif
 
 #ifdef PROFILE_P2P
-bool TCPServer::init_p2p(uint16_t p2p_port)
+template<typename T>
+bool TCPServer<T>::init_p2p(uint16_t p2p_port)
 {
 #ifdef PROFILE_DISCOVERY
     discovery_server_.set_filter_port(p2p_port);
 #endif
-    return agent_discoverer_.run(p2p_port, transport_address_);
+    return agent_discoverer_.run(p2p_port, TCPServerBase<T>::transport_address_);
 }
 
-bool TCPServer::close_p2p()
+template<typename T>
+bool TCPServer<T>::close_p2p()
 {
 #ifdef PROFILE_DISCOVERY
     discovery_server_.set_filter_port(0);
@@ -184,7 +191,8 @@ bool TCPServer::close_p2p()
 }
 #endif
 
-bool TCPServer::recv_message(
+template<typename T>
+bool TCPServer<T>::recv_message(
         InputPacket& input_packet,
         int timeout)
 {
@@ -201,15 +209,15 @@ bool TCPServer::recv_message(
     return rv;
 }
 
-bool TCPServer::send_message(OutputPacket output_packet)
+template<typename T>
+bool TCPServer<T>::send_message(OutputPacket output_packet)
 {
     bool rv = false;
     uint8_t msg_size_buf[2];
     const Ipv4EndPoint* destination = static_cast<const Ipv4EndPoint*>(output_packet.destination.get());
-    uint64_t source_id = (uint64_t(destination->get_addr()) << 16) | destination->get_port();
 
     std::unique_lock<std::mutex> lock(connections_mtx_);
-    auto it = source_to_connection_map_.find(source_id);
+    auto it = source_to_connection_map_.find(*destination);
     if (it != source_to_connection_map_.end())
     {
         TCPConnection& connection = connections_.at(it->second);
@@ -285,12 +293,14 @@ bool TCPServer::send_message(OutputPacket output_packet)
     return rv;
 }
 
-int TCPServer::get_error()
+template<typename T>
+int TCPServer<T>::get_error()
 {
     return errno;
 }
 
-bool TCPServer::open_connection(
+template<typename T>
+bool TCPServer<T>::open_connection(
         int fd,
         struct sockaddr_in* sockaddr)
 {
@@ -306,8 +316,8 @@ bool TCPServer::open_connection(
         connection.active = true;
         init_input_buffer(connection.input_buffer);
 
-        uint64_t source_id = (uint64_t(connection.addr) << 16) | connection.port;
-        source_to_connection_map_[source_id] = connection.id;
+        Ipv4EndPoint source{connection.addr, connection.port};
+        source_to_connection_map_[source] = connection.id;
         active_connections_.insert(id);
         free_connections_.pop_front();
         rv = true;
@@ -315,7 +325,8 @@ bool TCPServer::open_connection(
     return rv;
 }
 
-bool TCPServer::close_connection(TCPConnection& connection)
+template<typename T>
+bool TCPServer<T>::close_connection(TCPConnection& connection)
 {
     bool rv = false;
     TCPConnectionPlatform& connection_platform = static_cast<TCPConnectionPlatform&>(connection);
@@ -332,17 +343,16 @@ bool TCPServer::close_connection(TCPConnection& connection)
             connection.active = false;
             conn_lock.unlock();
 
-            uint64_t source_id = (uint64_t(connection.addr) << 16) | connection.port;
-
+            Ipv4EndPoint source{connection.addr, connection.port};
             /* Clear connections map and lists. */
             lock.lock();
-            source_to_connection_map_.erase(source_id);
+            source_to_connection_map_.erase(source);
             active_connections_.erase(it_conn);
             free_connections_.push_back(connection.id);
             lock.unlock();
 
             std::unique_lock<std::mutex> client_lock(clients_mtx_);
-            auto it_client = source_to_client_map_.find(source_id);
+            auto it_client = source_to_client_map_.find(source);
             if (it_client != source_to_client_map_.end())
             {
                 client_to_source_map_.erase(it_client->second);
@@ -354,13 +364,15 @@ bool TCPServer::close_connection(TCPConnection& connection)
     return rv;
 }
 
-void TCPServer::init_input_buffer(TCPInputBuffer& buffer)
+template<typename T>
+void TCPServer<T>::init_input_buffer(TCPInputBuffer& buffer)
 {
     buffer.state = TCPInputBufferState::EMPTY;
     buffer.msg_size = 0;
 }
 
-bool TCPServer::read_message(int timeout)
+template<typename T>
+bool TCPServer<T>::read_message(int timeout)
 {
     bool rv = false;
     int poll_rv = poll(poll_fds_.data(), poll_fds_.size(), timeout);
@@ -370,7 +382,7 @@ bool TCPServer::read_message(int timeout)
         {
             if (POLLIN == (POLLIN & conn.poll_fd->revents))
             {
-                uint16_t bytes_read = read_data(conn);
+                uint16_t bytes_read = TCPServerBase<T>::read_data(conn);
                 if (0 < bytes_read)
                 {
                     InputPacket input_packet;
@@ -392,7 +404,8 @@ bool TCPServer::read_message(int timeout)
     return rv;
 }
 
-void TCPServer::listener_loop()
+template<typename T>
+void TCPServer<T>::listener_loop()
 {
     while (running_cond_)
     {
@@ -418,13 +431,15 @@ void TCPServer::listener_loop()
     }
 }
 
-bool TCPServer::connection_available()
+template<typename T>
+bool TCPServer<T>::connection_available()
 {
     std::lock_guard<std::mutex> lock(connections_mtx_);
     return !free_connections_.empty();
 }
 
-size_t TCPServer::recv_locking(
+template<typename T>
+size_t TCPServer<T>::recv_locking(
         TCPConnection& connection,
         uint8_t* buffer,
         size_t len,
@@ -457,7 +472,8 @@ size_t TCPServer::recv_locking(
     return rv;
 }
 
-size_t TCPServer::send_locking(
+template<typename T>
+size_t TCPServer<T>::send_locking(
         TCPConnection& connection,
         uint8_t* buffer,
         size_t len,
@@ -481,6 +497,8 @@ size_t TCPServer::send_locking(
     }
     return rv;
 }
+
+template class TCPServer<Ipv4EndPoint>;
 
 } // namespace uxr
 } // namespace eprosima

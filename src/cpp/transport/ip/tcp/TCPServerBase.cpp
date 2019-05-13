@@ -18,7 +18,8 @@
 namespace eprosima {
 namespace uxr {
 
-TCPServerBase::TCPServerBase(
+template<typename T>
+TCPServerBase<T>::TCPServerBase(
         uint16_t agent_port,
         MiddlewareKind middleware_kind)
     : Server(middleware_kind)
@@ -33,17 +34,14 @@ TCPServerBase::TCPServerBase(
     transport_address_.medium_locator().port() = agent_port;
 }
 
-void TCPServerBase::on_create_client(
+template<typename T>
+void TCPServerBase<T>::on_create_client(
         EndPoint* source,
         const dds::xrce::CLIENT_Representation& representation)
 {
-    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
-    uint64_t source_id = (uint64_t(endpoint->get_addr()) << 16) | endpoint->get_port();
+    T* endpoint = static_cast<T*>(source);
     const dds::xrce::ClientKey& client_key = representation.client_key();
-    uint32_t client_id = uint32_t(client_key.at(0) +
-                                  (client_key.at(1) << 8) +
-                                  (client_key.at(2) << 16) +
-                                  (client_key.at(3) << 24));
+    uint32_t client_id = uint32_t(client_key.at(0) + (client_key.at(1) << 8) + (client_key.at(2) << 16) + (client_key.at(3) << 24));
 
     /* Update source for the client. */
     std::lock_guard<std::mutex> lock(clients_mtx_);
@@ -51,36 +49,36 @@ void TCPServerBase::on_create_client(
     if (it_client != client_to_source_map_.end())
     {
         source_to_client_map_.erase(it_client->second);
-        it_client->second = source_id;
+        it_client->second = *endpoint;
     }
     else
     {
-        client_to_source_map_.insert(std::make_pair(client_id, source_id));
+        client_to_source_map_.insert(std::make_pair(client_id, *endpoint));
     }
 
     /* Update client for the source. */
     if (127 < representation.session_id())
     {
-        auto it_source = source_to_client_map_.find(source_id);
+        auto it_source = source_to_client_map_.find(*endpoint);
         if (it_source != source_to_client_map_.end())
         {
             it_source->second = client_id;
         }
         else
         {
-            source_to_client_map_.insert(std::make_pair(source_id, client_id));
+            source_to_client_map_.insert(std::make_pair(*endpoint, client_id));
         }
     }
 }
 
-void TCPServerBase::on_delete_client(EndPoint* source)
+template<typename T>
+void TCPServerBase<T>::on_delete_client(EndPoint* source)
 {
-    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
-    uint64_t source_id = (endpoint->get_addr() << 16) | endpoint->get_port();
+    T* endpoint = static_cast<T*>(source);
 
     /* Update maps. */
     std::lock_guard<std::mutex> lock(clients_mtx_);
-    auto it = source_to_client_map_.find(source_id);
+    auto it = source_to_client_map_.find(*endpoint);
     if (it != source_to_client_map_.end())
     {
         client_to_source_map_.erase(it->second);
@@ -88,12 +86,13 @@ void TCPServerBase::on_delete_client(EndPoint* source)
     }
 }
 
-const dds::xrce::ClientKey TCPServerBase::get_client_key(EndPoint* source)
+template<typename T>
+const dds::xrce::ClientKey TCPServerBase<T>::get_client_key(EndPoint* source)
 {
     dds::xrce::ClientKey client_key;
-    Ipv4EndPoint* endpoint = static_cast<Ipv4EndPoint*>(source);
+    T* endpoint = static_cast<T*>(source);
     std::lock_guard<std::mutex> lock(clients_mtx_);
-    auto it = source_to_client_map_.find((uint64_t(endpoint->get_addr()) << 16) | endpoint->get_port());
+    auto it = source_to_client_map_.find(*endpoint);
     if (it != source_to_client_map_.end())
     {
         client_key.at(0) = uint8_t(it->second & 0x000000FF);
@@ -108,7 +107,8 @@ const dds::xrce::ClientKey TCPServerBase::get_client_key(EndPoint* source)
     return client_key;
 }
 
-std::unique_ptr<EndPoint> TCPServerBase::get_source(const dds::xrce::ClientKey& client_key)
+template<typename T>
+std::unique_ptr<EndPoint> TCPServerBase<T>::get_source(const dds::xrce::ClientKey& client_key)
 {
     std::unique_ptr<EndPoint> source;
     uint32_t client_id = uint32_t(client_key.at(0) + (client_key.at(1) << 8) + (client_key.at(2) << 16) + (client_key.at(3) << 24));
@@ -116,13 +116,13 @@ std::unique_ptr<EndPoint> TCPServerBase::get_source(const dds::xrce::ClientKey& 
     auto it = client_to_source_map_.find(client_id);
     if (it != client_to_source_map_.end())
     {
-        uint64_t source_id = it->second;
-        source.reset(new Ipv4EndPoint(uint32_t(source_id >> 16), uint16_t(source_id & 0xFFFF)));
+        source.reset(new T(it->second));
     }
     return source;
 }
 
-uint16_t TCPServerBase::read_data(TCPConnection& connection)
+template<typename T>
+uint16_t TCPServerBase<T>::read_data(TCPConnection& connection)
 {
     uint16_t rv = 0;
     bool exit_flag = false;
@@ -264,6 +264,8 @@ uint16_t TCPServerBase::read_data(TCPConnection& connection)
 
     return rv;
 }
+
+template class TCPServerBase<Ipv4EndPoint>;
 
 } // namespace uxr
 } // namespace eprosima

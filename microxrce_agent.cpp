@@ -330,7 +330,7 @@ int main(int argc, char** argv)
         {
             initializationError();
         }
-        server.reset(new eprosima::uxr::TCPServer(port, eprosima::uxr::FAST_MIDDLEWARE));
+        server.reset(new eprosima::uxr::TcpIpv4Server(port, eprosima::uxr::FAST_MIDDLEWARE));
         if (server->run())
         {
             std::cout << "--> OK: TCP Agent running at port " << port << std::endl;

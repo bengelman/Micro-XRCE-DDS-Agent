@@ -16,6 +16,7 @@
 #define UXR_AGENT_TRANSPORT_IP_TCP_SERVER_HPP_
 
 #include <uxr/agent/transport/ip/tcp/TCPServerBase.hpp>
+#include <uxr/agent/transport/ip/IpEndPoint.hpp>
 #ifdef PROFILE_DISCOVERY
 #include <uxr/agent/transport/discovery/DiscoveryServerLinux.hpp>
 #endif
@@ -43,8 +44,16 @@ public:
     struct pollfd* poll_fd;
 };
 
-class TCPServer : public TCPServerBase
+template<typename T>
+class TCPServer : public TCPServerBase<T>
 {
+    using Server::processor_;
+    using TCPServerBase<T>::port_;
+    using TCPServerBase<T>::clients_mtx_;
+    using TCPServerBase<T>::source_to_client_map_;
+    using TCPServerBase<T>::client_to_source_map_;
+    using TCPServerBase<T>::source_to_connection_map_;
+    using TCPServerBase<T>::read_data;
 public:
     TCPServer(
             uint16_t agent_port,
@@ -123,6 +132,8 @@ private:
     AgentDiscovererLinux agent_discoverer_;
 #endif
 };
+
+using TcpIpv4Server = TCPServer<Ipv4EndPoint>;
 
 } // namespace uxr
 } // namespace eprosima
