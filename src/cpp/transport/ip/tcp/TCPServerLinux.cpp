@@ -106,10 +106,11 @@ bool TCPServer<T>::init()
                     socklen_t local_addr_len = sizeof(local_addr);
                     if (-1 != getsockname(fd, &local_addr, &local_addr_len))
                     {
-                        transport_address_.medium_locator().address({uint8_t(local_addr.sa_data[2]),
-                                                                     uint8_t(local_addr.sa_data[3]),
-                                                                     uint8_t(local_addr.sa_data[4]),
-                                                                     uint8_t(local_addr.sa_data[5])});
+                        TCPServerBase<T>::transport_address_.medium_locator().address(
+                            {uint8_t(local_addr.sa_data[2]),
+                             uint8_t(local_addr.sa_data[3]),
+                             uint8_t(local_addr.sa_data[4]),
+                             uint8_t(local_addr.sa_data[5])});
                         rv = true;
                     }
                     ::close(fd);
@@ -382,7 +383,7 @@ bool TCPServer<T>::read_message(int timeout)
         {
             if (POLLIN == (POLLIN & conn.poll_fd->revents))
             {
-                uint16_t bytes_read = TCPServerBase<T>::read_data(conn);
+                uint16_t bytes_read = read_data(conn);
                 if (0 < bytes_read)
                 {
                     InputPacket input_packet;

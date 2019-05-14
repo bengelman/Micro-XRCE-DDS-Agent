@@ -48,7 +48,6 @@ template<typename T>
 class TCPServer : public TCPServerBase<T>
 {
     using Server::processor_;
-    using TCPServerBase<T>::port_;
     using TCPServerBase<T>::clients_mtx_;
     using TCPServerBase<T>::source_to_client_map_;
     using TCPServerBase<T>::client_to_source_map_;
