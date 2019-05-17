@@ -23,17 +23,18 @@
 namespace eprosima {
 namespace uxr {
 
-Server::Server(MiddlewareKind middleware_kind)
-    : processor_(new Processor(this, middleware_kind))
-    , running_cond_(false)
+template<typename T>
+Server<T>::Server(MiddlewareKind middleware_kind)
+    : running_cond_(false)
 {}
 
-Server::~Server()
+template<typename T>
+Server<T>::~Server()
 {
-    delete processor_;
 }
 
-bool Server::run()
+template<typename T>
+bool Server<T>::run()
 {
     /* Init server. */
     if (!init())
@@ -55,7 +56,8 @@ bool Server::run()
     return true;
 }
 
-bool Server::stop()
+template<typename T>
+bool Server<T>::stop()
 {
     running_cond_ = false;
     input_scheduler_.deinit();
@@ -88,13 +90,17 @@ bool Server::stop()
     return rv;
 }
 
-bool Server::load_config_file(const std::string& path)
+template<typename T>
+bool Server<T>::load_config_file(
+        const std::string& path)
 {
     return Root::instance().load_config_file(path);
 }
 
 #ifdef PROFILE_DISCOVERY
-bool Server::enable_discovery(uint16_t discovery_port)
+template<typename T>
+bool Server<T>::enable_discovery(
+        uint16_t discovery_port)
 {
     bool rv = false;
     if (running_cond_)
@@ -104,14 +110,17 @@ bool Server::enable_discovery(uint16_t discovery_port)
     return rv;
 }
 
-bool Server::disable_discovery()
+template<typename T>
+bool Server<T>::disable_discovery()
 {
     return close_discovery();
 }
 #endif
 
 #ifdef PROFILE_P2P
-bool Server::enable_p2p(uint16_t p2p_port)
+template<typename T>
+bool Server<T>::enable_p2p(
+        uint16_t p2p_port)
 {
     bool rv = false;
     if (running_cond_)
@@ -121,13 +130,16 @@ bool Server::enable_p2p(uint16_t p2p_port)
     return rv;
 }
 
-bool Server::disable_p2p()
+template<typename T>
+bool Server<T>::disable_p2p()
 {
     return close_p2p();
 }
 #endif
 
-void Server::push_output_packet(OutputPacket output_packet)
+template<typename T>
+void Server<T>::push_output_packet(
+        OutputPacket output_packet)
 {
     if (output_packet.destination && output_packet.message)
     {
@@ -135,7 +147,8 @@ void Server::push_output_packet(OutputPacket output_packet)
     }
 }
 
-void Server::receiver_loop()
+template<typename T>
+void Server<T>::receiver_loop()
 {
     InputPacket input_packet;
     while (running_cond_)
@@ -147,7 +160,8 @@ void Server::receiver_loop()
     }
 }
 
-void Server::sender_loop()
+template<typename T>
+void Server<T>::sender_loop()
 {
     OutputPacket output_packet;
     while (running_cond_)
@@ -159,7 +173,8 @@ void Server::sender_loop()
     }
 }
 
-void Server::processing_loop()
+template<typename T>
+void Server<T>::processing_loop()
 {
     InputPacket input_packet;
     while (running_cond_)
@@ -171,7 +186,8 @@ void Server::processing_loop()
     }
 }
 
-void Server::heartbeat_loop()
+template<typename T>
+void Server<T>::heartbeat_loop()
 {
     while (running_cond_)
     {

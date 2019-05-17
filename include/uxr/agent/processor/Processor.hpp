@@ -33,7 +33,6 @@ namespace eprosima {
 namespace uxr {
 
 class Root;
-class Server;
 class ProxyClient;
 struct InputPacket;
 struct OutputPacket;
@@ -43,7 +42,7 @@ class Processor
 {
 public:
     Processor(
-            Server* server,
+//            Server* server,
             MiddlewareKind middleware_kind);
 
     ~Processor();
@@ -111,7 +110,7 @@ private:
             const std::vector<uint8_t>& buffer);
 
 private:
-    Server* server_;
+//    Server* server_;
     MiddlewareKind middleware_kind_;
     Root& root_;
     std::recursive_mutex mtx_;

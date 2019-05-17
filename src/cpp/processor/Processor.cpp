@@ -22,10 +22,10 @@ namespace eprosima {
 namespace uxr {
 
 Processor::Processor(
-        Server* server,
+//        Server* server,
         MiddlewareKind middleware_kind)
-    : server_(server)
-    , middleware_kind_{middleware_kind}
+//    : server_(server)
+    : middleware_kind_{middleware_kind}
     , root_(Root::instance())
 {}
 

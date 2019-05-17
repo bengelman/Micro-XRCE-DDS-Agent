@@ -22,7 +22,6 @@
 namespace eprosima {
 namespace uxr {
 
-class Server;
 class EndPoint;
 
 typedef std::unique_ptr<InputMessage> InputMessagePtr;

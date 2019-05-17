@@ -15,11 +15,13 @@
 #ifndef UXR_AGENT_TRANSPORT_SERVER_HPP_
 #define UXR_AGENT_TRANSPORT_SERVER_HPP_
 
+#include <uxr/agent/transport/SessionManager.hpp>
 #include <uxr/agent/transport/EndPoint.hpp>
 #include <uxr/agent/scheduler/FCFSScheduler.hpp>
 #include <uxr/agent/message/Packet.hpp>
 #include <uxr/agent/processor/Processor.hpp>
 #include <uxr/agent/agent_dll.hpp>
+
 #include <thread>
 
 namespace eprosima {
@@ -27,6 +29,7 @@ namespace uxr {
 
 class Processor;
 
+template<typename T>
 class Server
 {
     friend class Processor;
@@ -36,16 +39,23 @@ public:
     virtual ~Server();
 
     UXR_AGENT_EXPORT bool run();
+
     UXR_AGENT_EXPORT bool stop();
-    UXR_AGENT_EXPORT bool load_config_file(const std::string& path);
+
+    UXR_AGENT_EXPORT bool load_config_file(
+            const std::string& path);
 
 #ifdef PROFILE_DISCOVERY
-    UXR_AGENT_EXPORT bool enable_discovery(uint16_t discovery_port = DISCOVERY_PORT);
+    UXR_AGENT_EXPORT bool enable_discovery(
+            uint16_t discovery_port = DISCOVERY_PORT);
+
     UXR_AGENT_EXPORT bool disable_discovery();
 #endif
 
 #ifdef PROFILE_P2P
-    UXR_AGENT_EXPORT bool enable_p2p(uint16_t p2p_port);
+    UXR_AGENT_EXPORT bool enable_p2p(
+            uint16_t p2p_port);
+
     UXR_AGENT_EXPORT bool disable_p2p();
 #endif
 
@@ -56,24 +66,29 @@ private:
             EndPoint* source,
             const dds::xrce::CLIENT_Representation& representation) = 0;
 
-    virtual void on_delete_client(EndPoint* source) = 0;
+    virtual void on_delete_client(
+            EndPoint* source) = 0;
 
-    virtual const dds::xrce::ClientKey get_client_key(EndPoint* source) = 0;
+    virtual const dds::xrce::ClientKey get_client_key(
+            EndPoint* source) = 0;
 
-    virtual std::unique_ptr<EndPoint> get_source(const dds::xrce::ClientKey& client_key) = 0;
+    virtual std::unique_ptr<EndPoint> get_source(
+            const dds::xrce::ClientKey& client_key) = 0;
 
     virtual bool init() = 0;
 
     virtual bool close() = 0;
 
 #ifdef PROFILE_DISCOVERY
-    virtual bool init_discovery(uint16_t discovery_port) = 0;
+    virtual bool init_discovery(
+            uint16_t discovery_port) = 0;
 
     virtual bool close_discovery() = 0;
 #endif
 
 #ifdef PROFILE_P2P
-    virtual bool init_p2p(uint16_t p2p_port) = 0;
+    virtual bool init_p2p(
+            uint16_t p2p_port) = 0;
 
     virtual bool close_p2p() = 0;
 #endif
@@ -82,7 +97,8 @@ private:
             InputPacket& input_packet,
             int timeout) = 0;
 
-    virtual bool send_message(OutputPacket output_packet) = 0;
+    virtual bool send_message(
+            OutputPacket output_packet) = 0;
 
     virtual int get_error() = 0;
 
@@ -103,8 +119,11 @@ private:
     std::unique_ptr<std::thread> processing_thread_;
     std::unique_ptr<std::thread> heartbeat_thread_;
     std::atomic<bool> running_cond_;
+
     FCFSScheduler<InputPacket> input_scheduler_;
     FCFSScheduler<OutputPacket> output_scheduler_;
+
+    SessionManager<T> session_manager_;
 };
 
 } // namespace uxr
