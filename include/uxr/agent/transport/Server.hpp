@@ -60,20 +60,8 @@ public:
 #endif
 
 private:
-    void push_output_packet(OutputPacket output_packet);
-
-    virtual void on_create_client(
-            EndPoint* source,
-            const dds::xrce::CLIENT_Representation& representation) = 0;
-
-    virtual void on_delete_client(
-            EndPoint* source) = 0;
-
-    virtual const dds::xrce::ClientKey get_client_key(
-            EndPoint* source) = 0;
-
-    virtual std::unique_ptr<EndPoint> get_source(
-            const dds::xrce::ClientKey& client_key) = 0;
+    void push_output_packet(
+            OutputPacket<T> output_packet);
 
     virtual bool init() = 0;
 
@@ -94,11 +82,11 @@ private:
 #endif
 
     virtual bool recv_message(
-            InputPacket& input_packet,
+            InputPacket<T>& input_packet,
             int timeout) = 0;
 
     virtual bool send_message(
-            OutputPacket output_packet) = 0;
+            OutputPacket<T> output_packet) = 0;
 
     virtual int get_error() = 0;
 
@@ -120,8 +108,8 @@ private:
     std::unique_ptr<std::thread> heartbeat_thread_;
     std::atomic<bool> running_cond_;
 
-    FCFSScheduler<InputPacket> input_scheduler_;
-    FCFSScheduler<OutputPacket> output_scheduler_;
+    FCFSScheduler<InputPacket<T>> input_scheduler_;
+    FCFSScheduler<OutputPacket<T>> output_scheduler_;
 
     SessionManager<T> session_manager_;
 };

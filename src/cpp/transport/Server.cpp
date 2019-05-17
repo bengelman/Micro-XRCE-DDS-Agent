@@ -139,7 +139,7 @@ bool Server<T>::disable_p2p()
 
 template<typename T>
 void Server<T>::push_output_packet(
-        OutputPacket output_packet)
+        OutputPacket<T> output_packet)
 {
     if (output_packet.destination && output_packet.message)
     {
@@ -150,7 +150,7 @@ void Server<T>::push_output_packet(
 template<typename T>
 void Server<T>::receiver_loop()
 {
-    InputPacket input_packet;
+    InputPacket<T> input_packet;
     while (running_cond_)
     {
         if (recv_message(input_packet, RECEIVE_TIMEOUT))
@@ -163,7 +163,7 @@ void Server<T>::receiver_loop()
 template<typename T>
 void Server<T>::sender_loop()
 {
-    OutputPacket output_packet;
+    OutputPacket<T> output_packet;
     while (running_cond_)
     {
         if (output_scheduler_.pop(output_packet))
@@ -176,7 +176,7 @@ void Server<T>::sender_loop()
 template<typename T>
 void Server<T>::processing_loop()
 {
-    InputPacket input_packet;
+    InputPacket<T> input_packet;
     while (running_cond_)
     {
         if (input_scheduler_.pop(input_packet))

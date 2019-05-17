@@ -12,33 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _UXR_AGENT_MESSAGE_PACKET_HPP_
-#define _UXR_AGENT_MESSAGE_PACKET_HPP_
+#ifndef UXR_AGENT_MESSAGE_PACKET_HPP_
+#define UXR_AGENT_MESSAGE_PACKET_HPP_
 
 #include <uxr/agent/message/InputMessage.hpp>
 #include <uxr/agent/message/OutputMessage.hpp>
+
 #include <memory>
 
 namespace eprosima {
 namespace uxr {
 
-class EndPoint;
-
 typedef std::unique_ptr<InputMessage> InputMessagePtr;
+
+template<typename T>
 struct InputPacket
 {
-    std::shared_ptr<EndPoint> source;
+    T source;
     InputMessagePtr message;
 };
 
 typedef std::shared_ptr<OutputMessage> OutputMessagePtr;
+
+template<typename T>
 struct OutputPacket
 {
-    std::shared_ptr<EndPoint> destination;
+    T destination;
     OutputMessagePtr message;
 };
 
 } // namespace uxr
 } // namespace eprosima
 
-#endif //_UXR_AGENT_MESSAGE_PACKET_HPP_
+#endif // UXR_AGENT_MESSAGE_PACKET_HPP_
