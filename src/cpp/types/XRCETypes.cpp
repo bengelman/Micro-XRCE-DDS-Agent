@@ -7284,6 +7284,7 @@ size_t dds::xrce::STATUS_AGENT_Payload::getMaxCdrSerializedSize(size_t current_a
 {
     size_t initial_alignment = current_alignment;
             
+    current_alignment += dds::xrce::ResultStatus::getMaxCdrSerializedSize(current_alignment);
     current_alignment += dds::xrce::AGENT_Representation::getMaxCdrSerializedSize(current_alignment);
 
     return current_alignment - initial_alignment;
@@ -7293,6 +7294,7 @@ size_t dds::xrce::STATUS_AGENT_Payload::getCdrSerializedSize(size_t current_alig
 {
     size_t initial_alignment = current_alignment;
             
+    current_alignment += m_result.getCdrSerializedSize(current_alignment);
     current_alignment += m_agent_info.getCdrSerializedSize(current_alignment);
 
     return current_alignment - initial_alignment;
@@ -7300,11 +7302,13 @@ size_t dds::xrce::STATUS_AGENT_Payload::getCdrSerializedSize(size_t current_alig
 
 void dds::xrce::STATUS_AGENT_Payload::serialize(eprosima::fastcdr::Cdr &scdr) const
 {
+    scdr << m_result;
     scdr << m_agent_info;
 }
 
 void dds::xrce::STATUS_AGENT_Payload::deserialize(eprosima::fastcdr::Cdr &dcdr)
 {
+    dcdr >> m_result;
     dcdr >> m_agent_info;
 }
 
