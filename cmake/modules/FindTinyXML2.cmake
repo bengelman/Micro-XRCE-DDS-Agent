@@ -5,7 +5,7 @@
 option(TINYXML2_FROM_SOURCE "Integrate TinyXML2 source code inside Fast RTPS" OFF)
 
 find_package(PkgConfig)
-#pkg_check_modules(TinyXML2 REQUIRED tinyxml2)
+pkg_check_modules(TinyXML2 REQUIRED tinyxml2)
 if(TinyXML2_FOUND)
     set(TINYXML2_LIBRARY ${TinyXML2_LIBRARIES})
 else()
