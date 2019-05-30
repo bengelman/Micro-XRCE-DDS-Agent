@@ -50,7 +50,7 @@ endif()
 ###############################################################################
 option(EPROSIMA_BUILD "Activate internal building" OFF)
 option(EPROSIMA_BUILD_TESTS "Activate the building tests" OFF)
-option(THIRDPARTY "Activate the build of thirdparties" ON)
+option(THIRDPARTY "Activate the build of thirdparties" OFF)
 option(VERBOSE "Use verbose output" OFF)
 option(EPROSIMA_INSTALLER "Activate the creation of a build to create Windows installer" OFF)
 
@@ -108,7 +108,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
 include(${PROJECT_SOURCE_DIR}/cmake/common/eprosima_libraries.cmake)
 eprosima_find_package(fastcdr REQUIRED)
 eprosima_find_package(fastrtps REQUIRED)
-eprosima_find_package(libtinyxml2 REQUIRED)
 eprosima_find_thirdparty(Asio asio)
 
 ###############################################################################
